@@ -9,6 +9,9 @@ Created on Sun Feb 19 15:13:40 2017
 import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
+import os.path
+from scipy import io, sparse
+import csv
 
 def improve_info():
     
@@ -50,7 +53,7 @@ def improve_info():
             i = i + 1
             
         #Improving node file info
-        Inf = np.hstack([Inf, parents, childs])
+        Inf = np.stack((Inf, parents, childs))  #PROBLEM HERE!!!
         Inf = pd.DataFrame(Inf)
         Inf.to_csv('/Users/benjaminpujol/Documents/Cours3A/CitationNetwork/node_information.csv', header=False, index=False)
         print('Childs and parents graph have been generated and stored on disk')
@@ -67,9 +70,37 @@ def buildTDIDF():
     if os.path.isfile(tdidf_title) and os.path.isfile(tdidf_abstract):
         return io.mmread(tdidf_title).tocsr(), io.mmread(tdidf_abstract).tocsr()
     
-    elif os.path.isfile(tditf_title):
+    elif os.path.isfile(tdidf_title):
         #Generating term vectorisation for abstract
         Inf = pd.read_csv('/Users/benjaminpujol/Documents/Cours3A/CitationNetwork/node_information.csv', header = None).set_index(0).values
-        vec = TfidVectorizer(sublinear_tf = True, max_df = 0.5, stop_words = "english" )  #Apply sublinear tf scaling ie replace tf -> 1 + log(tf) and ignore words that appear in more than 50% of docs
+        vec = TfidfVectorizer(sublinear_tf = True, max_df = 0.5, stop_words = "english" )  #Apply sublinear tf scaling ie replace tf -> 1 + log(tf) and ignore words that appear in more than 50% of docs
+        Inf = vec.fit_transform(Inf[:,2]) #Return term-document matrix
+        io.mmwrite(tdidf_abstract, Inf)
+        
+        return io.mmread(tdidf_title).tocsr(), Inf.tocsr() #Return matrix in a compressed sparse row format (csr)
     
-            
+    elif os.path.isfile(tdidf_abstract):
+
+        # Generating term vectorization for title
+        Inf = pd.read_csv('/Users/benjaminpujol/Documents/Cours3A/CitationNetwork/node_information.csv', header = None).set_index(0).values
+        vec = TfidfVectorizer(sublinear_tf=True, max_df=0.5, stop_words='english')
+        Inf = vec.fit_transform(Inf[:,1])
+        io.mmwrite(tdidf_title, Inf)
+
+        return Inf.tocsr(), io.mmread(tdidf_abstract).tocsr()
+        
+    else:
+        
+        # Generating term vectorization for both
+        Inf = pd.read_csv('/Users/benjaminpujol/Documents/Cours3A/CitationNetwork/node_information.csv', header = None).set_index(0).values
+        vec = TfidfVectorizer(sublinear_tf=True, max_df=0.5, stop_words='english')
+        # Title
+        Inf_title = vec.fit_transform(Inf[:,1])
+        io.mmwrite(tdidf_title, Inf_title)      
+        # Abstract
+        Inf_abstract   = vec.fit_transform(Inf[:,4])
+        io.mmwrite(tdidf_abstract, Inf_abstract)    
+
+        return Inf_title.tocsr(), Inf_abstract.tocsr()
+
+    
