@@ -6,13 +6,13 @@ Created on Sun Feb 19 15:36:21 2017
 @author: benjaminpujol
 """
 import nltk
-import preprocessing as PP
 import pandas as pd
 import random
 import networkx as nx
+import features_builder as FB
 
 
-_k = 0.00001
+_k = 0.001
 SINGLE_RUN = 1
 
 
@@ -32,7 +32,7 @@ def main():
     Inf = pd.read_csv('/Users/benjaminpujol/Documents/Cours3A/CitationNetwork/node_information.csv', sep = ',', header  = None).set_index(0) 
     Index = Inf.index
     
-    #TDIDF_title, TDIDF_abstract = PP.buildTDIDF()
+    TDIDF_title, TDIDF_abstract = PP.buildTDIDF()
     Index = pd.DataFrame(range(len(Index))).set_index(Index)
     
     
@@ -46,10 +46,6 @@ def main():
         index_train = set(X_train[:,0]).union(set(X_train[:,1]))
         index_test =  set(X_test[:,0]).union(set(X_test[:,1]))
         
-        return index_train, index_test
-
-    index_train, index_test = main()
-    print index_test
     
     #Creating a graph
     G = nx.graph()
@@ -61,6 +57,13 @@ def main():
     
     #Initiating similarity and feature class
     
-    similarity = PP.matching_sim()
+    Similarity = PP.matching_sim()
+    Feature_Builder = PP.features(Inf, Similarity, TDIDF_title, TDIDF_abstract, Index)
+    
+    #Computing features
+    print('-----------------------------------------------------')
+    print('Computing features for X_train')
+    X_train_features = Feature_Builder.gen_features(X_train, index_train)
+    print X_train_features[:10,:]
 
 
