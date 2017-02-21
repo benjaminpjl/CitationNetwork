@@ -55,7 +55,9 @@ def improve_info():
             i = i + 1
             
         print parents.shape
+        print parents[:10]
         print childs.shape
+        print childs[:10]
         print Inf.shape
             
         #Improving node file info
@@ -64,7 +66,6 @@ def improve_info():
         Inf.to_csv('/Users/benjaminpujol/Documents/Cours3A/CitationNetwork/node_information.csv', header=False, index=False)
         print('Childs and parents graph have been generated and stored on disk')
 
-improve_info()
 
 def buildTDIDF():
    
@@ -259,7 +260,7 @@ class features:
             same_child.append(self.sim.give_score(source_childs, target_childs))
             same_parent.append(self.sim.give_score(source_parents, target_parents))
             
-            nb_source_childs.append(len(set(source_childs)))
+            nb_source_childs.append(len(set(source_childs)))mm
             nb_target_childs.append(len(set(target_childs))) 
     
             nb_source_parents.append(len(set(source_parents)))
@@ -271,7 +272,7 @@ class features:
             if (i + 1) % int(len(self.edges)/4) == 0:
                     print(str(i) + "/" + str(len(self.edges)) + " samples processsed (" + str(100*i/len(self.edges)) + "%)")
             
-    # Return final feature representation
+        # Return final feature representation
         return np.array([overlap_title, title_tdidf, temp_diff,comm_auth,overlap_abstract, abstract_tdidf, same_journal,same_child,same_parent, \ 
                          nb_source_childs, nb_target_childs, nb_source_parents, nb_target_parents], dtype = np.float64).T
             
