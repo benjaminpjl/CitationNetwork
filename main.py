@@ -12,7 +12,8 @@ import networkx as nx
 import sys
 sys.path.append('/Users/benjaminpujol/Documents/Cours3A/CitationNetwork/')
 import features_builder as FB
-
+from sklearn import svm
+from sklearn import preprocessing
 
 _k = 0.001
 SINGLE_RUN = 1
@@ -40,8 +41,7 @@ def main():
         #Selecting only subsets of the data
         to_keep = random.sample(range(len(X_train)), k = int(round(len(X_train)*_k)))
         X_train = X_train[to_keep]
-        Y_train = Y_train[to_keep]
-      
+        Y_train = Y_train[to_keep] 
         
         index_train = set(X_train[:,0]).union(set(X_train[:,1]))
         index_test =  set(X_test[:,0]).union(set(X_test[:,1]))
@@ -64,8 +64,57 @@ def main():
     print('-----------------------------------------------------')
     print('Computing features for X_train')
     X_train_features = Feature_Builder.gen_features(X_train, index_train)
-    print X_train_features[:10,:]
+    np.save("X_test_features.npy", X_train_features)
+
+    print('-----------------------------------------------------')
+    print("Computing features for  X_test")
+    X_test_features  = Feature_Builder.gen_features(X_test, index_test)
+    np.save("X_test_features.npy", X_test_features)
+
+    #Getting prediction for linear SVM
+
+    Classifier = svm.SVC(kernel ='rbf', gamma = 2)
+
+    Pred = GetPrediction(X_train_features, Y_train, X_test_features, Classifier)
+
+    #Comparing to best to date submission
+
+    ##Fill the code here##
+
+    #Write submission file
+    WriteSubmission(Pred, 'Prediction/submission.csv')
 
 
-main()
+    def GetPrediction(X_train, Y_train, X_test, classifier = None):
+
+        #Initializing default linear SVM Classifier
+        if classifier == none:
+            classifier = svm.LinearSVC()
+
+        #Preprocessing data: Center to the mean and component wise scale to unit variance
+        X_train = preprocessing.scale(X_train)
+        X_test = preprocessing.scale(X_test)
+
+        #Training classifier
+        print("Fitting started")
+        classifier.fit(X_train, Y_train)
+
+        print("Fitting over")
+        print("Starting prediction")
+
+        return classifier.predict(X_test)
+
+    def WriteSubmission(Pred, loc):
+        df = pd.DataFrame(Pred)
+        df.columns = ['category']
+        df.index.name = 'id'
+        df.to_csv(loc)
+
+
+
+
+
+
+if __name__ == "__main__":
+    main()
 
