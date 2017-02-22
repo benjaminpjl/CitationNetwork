@@ -13,7 +13,11 @@ import os.path
 from scipy import io, sparse
 import csv
 import nltk
+from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
+
+
+
 
 def improve_info():
     
@@ -111,9 +115,9 @@ def buildTDIDF():
         return Inf_title.tocsr(), Inf_abstract.tocsr()
         
 class similarity_measure:
-    def __init__(self, name, stpwds):
+    def __init__(self, name, stopwds):
         self.name = name
-        self.stpwds = stpwds
+        self.stopwds = stopwds
         self.stemmer = PorterStemmer()
     
     def give_score(self, obj1, obj2):
@@ -127,15 +131,13 @@ class similarity_measure:
         obj2 = [self.stemmer.stem(token) for token in obj2]
         return obj1, obj2
     
-    def score(self, obj1, obj2):
-        pass
-
+   
 class matching_sim(similarity_measure):
     def __init__(self):
-        similarity_measure.__init__(self, 'Matching Similarity', set(nltk.corpus.stopwords("english")))
-   
-    def score(self,obj1,obj2):
-        return len(set(obj1).intersection(set(obj2)))
+        similarity_measure.__init__(self,'Matching Similarity',set(stopwords.words('english')))
+
+    def score(self, obj_1, obj_2):
+        return len(set(obj_1).intersection(set(obj_2)))
         
         
         
@@ -143,7 +145,8 @@ class matching_sim(similarity_measure):
         
         
 class features:
-    def __init__(self, info, similarity_measure, TDIDF_title, TDIDF_abstract, Index)
+    
+    def __init__(self, info, similarity_measure, TDIDF_title, TDIDF_abstract, Index):
         self.info = info
         self.similarity_measure = similarity_measure
         self.TDIDF_title = TDIDF_title
@@ -175,7 +178,7 @@ class features:
                 if X_train[i,1] in link_text:
                     link_text["X_train[i,1]"] = link_text["X_train[i,1]"].append(X_train[i,0])
                 else:
-                    link_text["X_train[i,1]"] = [X_train[i;0]]
+                    link_text["X_train[i,1]"] = [X_train[i,0]]
         return link_text
         
         
@@ -260,7 +263,7 @@ class features:
             same_child.append(self.sim.give_score(source_childs, target_childs))
             same_parent.append(self.sim.give_score(source_parents, target_parents))
             
-            nb_source_childs.append(len(set(source_childs)))mm
+            nb_source_childs.append(len(set(source_childs)))
             nb_target_childs.append(len(set(target_childs))) 
     
             nb_source_parents.append(len(set(source_parents)))
@@ -273,6 +276,5 @@ class features:
                     print(str(i) + "/" + str(len(self.edges)) + " samples processsed (" + str(100*i/len(self.edges)) + "%)")
             
         # Return final feature representation
-        return np.array([overlap_title, title_tdidf, temp_diff,comm_auth,overlap_abstract, abstract_tdidf, same_journal,same_child,same_parent, \ 
-                         nb_source_childs, nb_target_childs, nb_source_parents, nb_target_parents], dtype = np.float64).T
+        return np.array([overlap_title, title_tdidf, temp_diff,comm_auth,overlap_abstract, abstract_tdidf, same_journal,same_child,same_parent, nb_source_childs, nb_target_childs, nb_source_parents, nb_target_parents], dtype = np.float64).T
             
