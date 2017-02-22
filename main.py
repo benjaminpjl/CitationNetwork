@@ -9,6 +9,8 @@ import nltk
 import pandas as pd
 import random
 import networkx as nx
+import sys
+sys.path.append('/Users/benjaminpujol/Documents/Cours3A/CitationNetwork/')
 import features_builder as FB
 
 
@@ -18,12 +20,10 @@ SINGLE_RUN = 1
 
 def main():
     
-    #NLP settings
-    nltk.download('stopwords')
-    stpwds = set(nltk.corpus.stopwords.words("english"))
+    
     
     #Constructs child and parent graphs
-    PP.improve_info()
+    #FB.improve_info()
     
     #Loading full data
     X_train = pd.read_csv('/Users/benjaminpujol/Documents/Cours3A/CitationNetwork/training_set.txt', sep = ' ', header  = None).values
@@ -32,7 +32,7 @@ def main():
     Inf = pd.read_csv('/Users/benjaminpujol/Documents/Cours3A/CitationNetwork/node_information.csv', sep = ',', header  = None).set_index(0) 
     Index = Inf.index
     
-    TDIDF_title, TDIDF_abstract = PP.buildTDIDF()
+    TDIDF_title, TDIDF_abstract = FB.buildTDIDF()
     Index = pd.DataFrame(range(len(Index))).set_index(Index)
     
     
@@ -48,7 +48,7 @@ def main():
         
     
     #Creating a graph
-    G = nx.graph()
+    G = nx.Graph()
     #Adding nodes and edges
     ind = X_train[:,2]==1
     G.add_nodes_from(Inf.index)  #Add every documents as a node
@@ -57,8 +57,8 @@ def main():
     
     #Initiating similarity and feature class
     
-    Similarity = PP.matching_sim()
-    Feature_Builder = PP.features(Inf, Similarity, TDIDF_title, TDIDF_abstract, Index)
+    Similarity = FB.matching_sim()
+    Feature_Builder = FB.features(Inf, Similarity, TDIDF_title, TDIDF_abstract, Index)
     
     #Computing features
     print('-----------------------------------------------------')
@@ -66,4 +66,6 @@ def main():
     X_train_features = Feature_Builder.gen_features(X_train, index_train)
     print X_train_features[:10,:]
 
+
+main()
 
