@@ -41,7 +41,7 @@ def main():
         to_keep = random.sample(range(len(X_train)), k = int(round(len(X_train)*_k)))
         X_train = X_train[to_keep]
         Y_train = Y_train[to_keep]
-        print X_train
+      
         
         index_train = set(X_train[:,0]).union(set(X_train[:,1]))
         index_test =  set(X_test[:,0]).union(set(X_test[:,1]))

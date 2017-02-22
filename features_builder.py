@@ -115,9 +115,9 @@ def buildTDIDF():
         return Inf_title.tocsr(), Inf_abstract.tocsr()
         
 class similarity_measure:
-    def __init__(self, name, stopwds):
+    def __init__(self, name, stpwds):
         self.name = name
-        self.stopwds = stopwds
+        self.stpwds = stpwds
         self.stemmer = PorterStemmer()
     
     def give_score(self, obj1, obj2):
@@ -130,11 +130,13 @@ class similarity_measure:
         obj2 = [token for token in obj2 if token not in self.stpwds]
         obj2 = [self.stemmer.stem(token) for token in obj2]
         return obj1, obj2
-    
+
+    def score(self, obj1, obj2):
+        pass
    
 class matching_sim(similarity_measure):
     def __init__(self):
-        similarity_measure.__init__(self,'Matching Similarity',set(stopwords.words('english')))
+        similarity_measure.__init__(self,'Matching Similarity',set(nltk.corpus.stopwords.words('english')))
 
     def score(self, obj_1, obj_2):
         return len(set(obj_1).intersection(set(obj_2)))
@@ -146,9 +148,9 @@ class matching_sim(similarity_measure):
         
 class features:
     
-    def __init__(self, info, similarity_measure, TDIDF_title, TDIDF_abstract, Index):
+    def __init__(self, info, sim, TDIDF_title, TDIDF_abstract, Index):
         self.info = info
-        self.similarity_measure = similarity_measure
+        self.sim= sim
         self.TDIDF_title = TDIDF_title
         self.TDIDF_abstract = TDIDF_abstract
         self.Index = Index
@@ -186,95 +188,92 @@ class features:
     
         
         
-    def gen_features(self, edges, index = False):
-        
-        if index:
-            self.set_tdidf(index)
-        
-        self.edges = edge
-        
-        #Features
-        
-        temp_diff = []  #Time difference
-        comm_author = []
-        same_journal = []
+    def gen_features(self, edges, index):
+       self.set_tdidf(index)
+       
+       #Features
+       temp_diff = []  #Time difference
+       comm_author = []
+       same_journal = []
 
-        overlap_title = []
-        overlap_abstract = []
+       overlap_title = []
+       overlap_abstract = []
 
-        title_tfidf = []
-        abstract_tdidf = []
+       title_tdidf = []
+       abstract_tdidf = []
 
-        same_child = []
-        same_parent = []
+       same_child = []
+       same_parent = []
 
-        nb_source_childs = []
-        nb_source_parents = []
+       nb_source_childs = []
+       nb_source_parents = []
 
-        nb_target_childs = []
-        nb_target_parents = []
+       nb_target_childs = []
+       nb_target_parents = []
 
-        #Looping over edges
-        for i in xrange (len(self.edges)):
-            
-            source = self.edges[i][0]
-            target = self.edges[i][1]
+       #Looping over edges
+       for i in xrange (len(edges)):
+           
+           source = edges[i][0]
+           target = edges[i][1]
 
-            source_info = self.info.loc[source].fillna(str(source))
-            target_info = self.info.loc[target].fillna(str(target))
-            
-            #Processing titles
-            source_title = source_info[2].lower.split(" ")
-            target_title = target_info[2].lower.split(" ")
-            title_tdidf_  = self.TDITF_title[self.Index.loc[source].values[0]].dot(self.TDITF_title[self.Index.loc[target].values[0]].T).todense()[0,0]
-            
+           source_info = self.info.loc[source].fillna(str(source))
+           target_info = self.info.loc[target].fillna(str(target))
+           
 
-            #Processing abstracts
-            
-            source_abstract = source_info[5].lower.split(" ")
-            target_abstract = target_info[5].lower.split(" ")
-            abstract_tdidf_  = self.TDITF_abstract[self.Index.loc[source].values[0]].dot(self.TDITF_abstract[self.Index.loc[target].values[0]].T).todense()[0,0]
-            
-            #Processing authors
-            source_auth = source_info[3].split(",")
-            target_auth = target_info[3].split(",")
-            
-            # Processing journal of publication
-            source_journal = source_info[4].split(".")
-            target_journal = target_info[4].split(".")
-            
-            # Processing children and parents
-            source_parents = source_info[6].split(" ")
-            target_parents = target_info[6].split(" ")  
-            
-            source_childs  = source_info[7].split(" ")
-            target_childs  = target_info[7].split(" ") 
-            
-            # Appending to features
-            
-            temp_diff.append(int(source_info[1])-int(target_info[1]))
-            
-            overlap_title.append(self.sim.give_score(source_title, target_title))
-            title_tfidf.append(title_tdidf_)
-            
-            overlap_abstract.append(self.sim.give_score(source_abstract, target_abstract))
-            abstract_tdidf.append(abstract_tdidf_)
-            
-            same_child.append(self.sim.give_score(source_childs, target_childs))
-            same_parent.append(self.sim.give_score(source_parents, target_parents))
-            
-            nb_source_childs.append(len(set(source_childs)))
-            nb_target_childs.append(len(set(target_childs))) 
-    
-            nb_source_parents.append(len(set(source_parents)))
-            nb_target_parents.append(len(set(target_parents))) 
-            
-            comm_auth.append(len(set(source_auth).intersection(set(target_auth))))
-            same_journal.append(self.sim.give_score(source_journal,target_journal))
-            
-            if (i + 1) % int(len(self.edges)/4) == 0:
-                    print(str(i) + "/" + str(len(self.edges)) + " samples processsed (" + str(100*i/len(self.edges)) + "%)")
-            
-        # Return final feature representation
-        return np.array([overlap_title, title_tdidf, temp_diff,comm_auth,overlap_abstract, abstract_tdidf, same_journal,same_child,same_parent, nb_source_childs, nb_target_childs, nb_source_parents, nb_target_parents], dtype = np.float64).T
-            
+           
+           #Processing titles
+           source_title = source_info[2].lower().split(" ")
+           target_title = target_info[2].lower().split(" ")
+           title_tdidf_  = self.TDIDF_title[self.Index.loc[source].values[0]].dot(self.TDIDF_title[self.Index.loc[target].values[0]].T).todense()[0,0]
+           
+
+           #Processing abstracts
+           
+           source_abstract = source_info[5].lower().split(" ")
+           target_abstract = target_info[5].lower().split(" ")
+           abstract_tdidf_  = self.TDIDF_abstract[self.Index.loc[source].values[0]].dot(self.TDIDF_abstract[self.Index.loc[target].values[0]].T).todense()[0,0]
+           
+           #Processing authors
+           source_auth = source_info[3].split(",")
+           target_auth = target_info[3].split(",")
+           
+           # Processing journal of publication
+           source_journal = source_info[4].split(".")
+           target_journal = target_info[4].split(".")
+           
+           # Processing children and parents
+           source_parents = source_info[6].split(" ")
+           target_parents = target_info[6].split(" ")  
+           
+           source_childs  = source_info[7].split(" ")
+           target_childs  = target_info[7].split(" ") 
+           
+           # Appending to features
+           
+           temp_diff.append(int(source_info[1])-int(target_info[1]))
+           
+           overlap_title.append(self.sim.give_score(source_title, target_title))
+           title_tdidf.append(title_tdidf_)
+           
+           overlap_abstract.append(self.sim.give_score(source_abstract, target_abstract))
+           abstract_tdidf.append(abstract_tdidf_)
+           
+           same_child.append(self.sim.give_score(source_childs, target_childs))
+           same_parent.append(self.sim.give_score(source_parents, target_parents))
+           
+           nb_source_childs.append(len(set(source_childs)))
+           nb_target_childs.append(len(set(target_childs))) 
+   
+           nb_source_parents.append(len(set(source_parents)))
+           nb_target_parents.append(len(set(target_parents))) 
+           
+           comm_author.append(len(set(source_auth).intersection(set(target_auth))))
+           same_journal.append(self.sim.give_score(source_journal,target_journal))
+           
+           if (i + 1) % int(len(edges)/4) == 0:
+                   print(str(i) + "/" + str(len(edges)) + " samples processsed (" + str(100*i/len(edges)) + "%)")
+           
+       # Return final feature representation
+       return np.array([overlap_title, title_tdidf, temp_diff,comm_author,overlap_abstract, abstract_tdidf, same_journal,same_child,same_parent, nb_source_childs, nb_target_childs, nb_source_parents, nb_target_parents], dtype = np.float64).T
+           
