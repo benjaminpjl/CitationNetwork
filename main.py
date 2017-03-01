@@ -16,8 +16,36 @@ from sklearn import svm
 from sklearn import preprocessing
 import numpy as np
 
-_k = 0.001
+_k = 1
 SINGLE_RUN = 1
+
+def GetPrediction(X_train, Y_train, X_test, classifier = None):
+
+        #Initializing default linear SVM Classifier
+        if classifier == None:
+            classifier = svm.LinearSVC()
+
+        #Preprocessing data: Center to the mean and component wise scale to unit variance
+        X_train = preprocessing.scale(X_train)
+        X_test = preprocessing.scale(X_test)
+
+        #Training classifier
+        print("Fitting started")
+        classifier.fit(X_train, Y_train)
+
+        print("Fitting over")
+        print("Starting prediction")
+
+        return classifier.predict(X_test)
+
+def WriteSubmission(Pred, loc):
+        df = pd.DataFrame(Pred)
+        df.columns = ['category']
+        df.index.name = 'id'
+        df.to_csv(loc)
+
+
+
 
 
 def main():
@@ -28,7 +56,7 @@ def main():
     #FB.improve_info()
     
     #Loading full data
-    X_train = pd.read_csv('/Users/benjaminpujol/Documents/Cours3A/CitationNetwork/training_set.txt', sep = ' ', header  = None).values
+    X_train = pd.read_csv('training_set.txt', sep = ' ', header  = None).values
     Y_train = X_train[:,2]
     X_test = pd.read_csv('/Users/benjaminpujol/Documents/Cours3A/CitationNetwork/testing_set.txt', sep = ' ', header  = None).values
     Inf = pd.read_csv('/Users/benjaminpujol/Documents/Cours3A/CitationNetwork/node_information.csv', sep = ',', header  = None).set_index(0) 
@@ -49,7 +77,7 @@ def main():
         
     
    
-    #Initiating similarity and feature class
+    #Initiating similarity and feature_builder class
     
     Similarity = FB.matching_sim()
     Feature_Builder = FB.features(Inf, Similarity, TDIDF_title, TDIDF_abstract, Index)
@@ -57,13 +85,13 @@ def main():
     #Computing features
     print('-----------------------------------------------------')
     print('Computing features for X_train')
-    X_train_features = Feature_Builder.gen_features(X_train, index_train)
-    np.save("X_train_features.npy", X_train_features)
+    #X_train_features = Feature_Builder.gen_features(X_train, index_train)
+    X_train_features = np.load("/Users/benjaminpujol/Documents/Cours3A/CitationNetwork/X_train_features.npy")
 
     print('-----------------------------------------------------')
     print("Computing features for  X_test")
-    X_test_features  = Feature_Builder.gen_features(X_test, index_test)
-    np.save("X_test_features.npy", X_test_features)
+    #X_test_features  = Feature_Builder.gen_features(X_test, index_test)
+    X_test_features = np.load("/Users/benjaminpujol/Documents/Cours3A/CitationNetwork/X_test_features.npy")
 
     #Getting prediction for linear SVM
 
@@ -76,36 +104,10 @@ def main():
     ##Fill the code here##
 
     #Write submission file
-    WriteSubmission(Pred, 'Prediction/submission.csv')
+    WriteSubmission(Pred, '/Users/benjaminpujol/Documents/Cours3A/CitationNetwork/submission.csv')
 
 
-    def GetPrediction(X_train, Y_train, X_test, classifier = None):
-
-        #Initializing default linear SVM Classifier
-        if classifier == none:
-            classifier = svm.LinearSVC()
-
-        #Preprocessing data: Center to the mean and component wise scale to unit variance
-        X_train = preprocessing.scale(X_train)
-        X_test = preprocessing.scale(X_test)
-
-        #Training classifier
-        print("Fitting started")
-        classifier.fit(X_train, Y_train)
-
-        print("Fitting over")
-        print("Starting prediction")
-
-        return classifier.predict(X_test)
-
-    def WriteSubmission(Pred, loc):
-        df = pd.DataFrame(Pred)
-        df.columns = ['category']
-        df.index.name = 'id'
-        df.to_csv(loc)
-
-
-
+  
 
 
 
