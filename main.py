@@ -16,7 +16,7 @@ from sklearn import svm
 from sklearn import preprocessing
 import numpy as np
 
-_k = 1
+_k = 0.001
 SINGLE_RUN = 1
 
 def GetPrediction(X_train, Y_train, X_test, classifier = None):
@@ -35,6 +35,8 @@ def GetPrediction(X_train, Y_train, X_test, classifier = None):
 
         print("Fitting over")
         print("Starting prediction")
+        
+        print classifier.score(X_train, Y_train)
 
         return classifier.predict(X_test)
 
@@ -51,43 +53,45 @@ def WriteSubmission(Pred, loc):
 def main():
     
     
-    
-    #Constructs child and parent graphs
-    #FB.improve_info()
-    
-    #Loading full data
-    X_train = pd.read_csv('training_set.txt', sep = ' ', header  = None).values
+#    
+#    #Constructs child and parent graphs
+#    #FB.improve_info()
+#    
+#    #Loading full data 
+    X_train = pd.read_csv('/Users/benjaminpujol/Documents/Cours3A/CitationNetwork/training_set.txt', sep = ' ', header  = None)
     Y_train = X_train[:,2]
-    X_test = pd.read_csv('/Users/benjaminpujol/Documents/Cours3A/CitationNetwork/testing_set.txt', sep = ' ', header  = None).values
-    Inf = pd.read_csv('/Users/benjaminpujol/Documents/Cours3A/CitationNetwork/node_information.csv', sep = ',', header  = None).set_index(0) 
-    Index = Inf.index
-    
-    TDIDF_title, TDIDF_abstract = FB.buildTDIDF()
-    Index = pd.DataFrame(range(len(Index))).set_index(Index)
-    
-    
-    if SINGLE_RUN: 
-        #Selecting only subsets of the data
-        to_keep = random.sample(range(len(X_train)), k = int(round(len(X_train)*_k)))
-        X_train = X_train[to_keep]
-        Y_train = Y_train[to_keep] 
-        
-        index_train = set(X_train[:,0]).union(set(X_train[:,1]))
-        index_test =  set(X_test[:,0]).union(set(X_test[:,1]))
-        
-    
-   
-    #Initiating similarity and feature_builder class
-    
-    Similarity = FB.matching_sim()
-    Feature_Builder = FB.features(Inf, Similarity, TDIDF_title, TDIDF_abstract, Index)
+#    X_test = pd.read_csv('/Users/benjaminpujol/Documents/Cours3A/CitationNetwork/testing_set.txt', sep = ' ', header  = None).values
+#    Inf = pd.read_csv('/Users/benjaminpujol/Documents/Cours3A/CitationNetwork/node_information.csv', sep = ',', header  = None).set_index(0) 
+#    Index = Inf.index
+#    
+#    TDIDF_title, TDIDF_abstract = FB.buildTDIDF()
+#    Index = pd.DataFrame(range(len(Index))).set_index(Index)
+#    
+#    
+#    if SINGLE_RUN: 
+#        #Selecting only subsets of the data
+#        to_keep = random.sample(range(len(X_train)), k = int(round(len(X_train)*_k)))
+#        X_train = X_train[to_keep]
+#        Y_train = Y_train[to_keep] 
+#        
+#        index_train = set(X_train[:,0]).union(set(X_train[:,1]))
+#        index_test =  set(X_test[:,0]).union(set(X_test[:,1]))
+#        
+#    
+#   
+#    #Initiating similarity and feature_builder class
+#    
+#    Similarity = FB.matching_sim()
+#    Feature_Builder = FB.features(Inf, Similarity, TDIDF_title, TDIDF_abstract, Index)
     
     #Computing features
     print('-----------------------------------------------------')
     print('Computing features for X_train')
     #X_train_features = Feature_Builder.gen_features(X_train, index_train)
     X_train_features = np.load("/Users/benjaminpujol/Documents/Cours3A/CitationNetwork/X_train_features.npy")
-
+    X_train_features= X_train_features[:6000]
+    Y_train[:6000]
+    
     print('-----------------------------------------------------')
     print("Computing features for  X_test")
     #X_test_features  = Feature_Builder.gen_features(X_test, index_test)
@@ -98,13 +102,15 @@ def main():
     Classifier = svm.SVC(kernel ='rbf', gamma = 2)
 
     Pred = GetPrediction(X_train_features, Y_train, X_test_features, Classifier)
+    
+    
 
     #Comparing to best to date submission
 
     ##Fill the code here##
 
     #Write submission file
-    WriteSubmission(Pred, '/Users/benjaminpujol/Documents/Cours3A/CitationNetwork/submission.csv')
+    #WriteSubmission(Pred, '/Users/benjaminpujol/Documents/Cours3A/CitationNetwork/submission.csv')
 
 
   
